@@ -2,23 +2,29 @@
 let todoList = []; //declares a new array for Your todo list
 
 let initList = function() {
-    todoList.push(
-    {
-        title: "Learn JS",
-        description: "Create a demo application for my TODO's",
-        place: "445",
-        category: '',
-        dueDate: new Date(2024,10,16)
-    },
-    {
-        title: "Lecture test",
-        description: "Quick test from the first three lectures",
-        place: "F6",
-        category: '',
-        dueDate: new Date(2024,10,17)
+    let savedList = window.localStorage.getItem("todos");
+    if (savedList != null)
+        todoList = JSON.parse(savedList);
+    else {
+        //code creating a default list with 2 items
+        todoList.push(
+        {
+            title: "Learn JS",
+            description: "Create a demo application for my TODO's",
+            place: "445",
+            category: '',
+            dueDate: new Date(2024,10,16)
+        },
+        {
+            title: "Lecture test",
+            description: "Quick test from the first three lectures",
+            place: "F6",
+            category: '',
+            dueDate: new Date(2024,10,17)
+        }
+            // of course the lecture test mentioned above will not take place
+        );
     }
-        // of course the lecture test mentioned above will not take place
-    );
 }
 
 initList();
@@ -77,4 +83,5 @@ let addTodo = function() {
       };
     //add item to the list
       todoList.push(newTodo);
+      window.localStorage.setItem("todos", JSON.stringify(todoList));
   }
