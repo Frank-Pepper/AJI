@@ -43,3 +43,26 @@ let updateTodoList = function() {
 }
 
 setInterval(updateTodoList, 1000);
+
+let addTodo = function() {
+    //get the elements in the form
+      let inputTitle = document.getElementById("inputTitle");
+      let inputDescription = document.getElementById("inputDescription");
+      let inputPlace = document.getElementById("inputPlace");
+      let inputDate = document.getElementById("inputDate");
+    //get the values from the form
+      let newTitle = inputTitle.value;
+      let newDescription = inputDescription.value;
+      let newPlace = inputPlace.value;
+      let newDate = new Date(inputDate.value);
+    //create new item
+      let newTodo = {
+          title: newTitle,
+          description: newDescription,
+          place: newPlace,
+          category: '',
+          dueDate: newDate
+      };
+    //add item to the list
+      todoList.push(newTodo);
+  }
