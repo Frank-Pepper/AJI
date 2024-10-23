@@ -6,7 +6,6 @@ let initList = function() {
     if (savedList != null)
         todoList = JSON.parse(savedList);
     else {
-        //code creating a default list with 2 items
         todoList.push(
         {
             title: "Learn JS",
@@ -39,20 +38,30 @@ let updateTodoList = function() {
     }
 
     //add all elements
+    let filterInput = document.getElementById("inputSearch");   
     for (let todo in todoList) {
-        let newElement = document.createElement("div");
-        let newContent = document.createTextNode(
-            todoList[todo].title + " " + todoList[todo].description);
+    if (
+        (filterInput.value == "") ||
+        (todoList[todo].title.includes(filterInput.value)) ||
+        (todoList[todo].description.includes(filterInput.value))
+    ) {
+        let newElement = document.createElement("p");
+        let newContent = document.createTextNode(todoList[todo].title + " " +
+                                            todoList[todo].description + " " +
+                                            todoList[todo].place + " " +
+                                            todoList[todo].dueDate + " " );
         let newDeleteButton = document.createElement("input");
-        newDeleteButton.type = "button";
-        newDeleteButton.value = "x";
-        newDeleteButton.addEventListener("click",
-            function() {
-                deleteTodo(todo);
-            });
+            newDeleteButton.type = "button";
+            newDeleteButton.value = "x";
+            newDeleteButton.addEventListener("click",
+                function() {
+                    deleteTodo(todo);
+                });
+                                            
         newElement.appendChild(newContent);
         newElement.appendChild(newDeleteButton);
         todoListDiv.appendChild(newElement);
+    }
     }
 }
 
