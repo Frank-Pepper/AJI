@@ -1,130 +1,93 @@
-"use strict"
-let todoList = []; //declares a new array for Your todo list
+"use strict";
+let todoList = []; 
 
-//initList();
-
-const BIN_ID = "672108bead19ca34f8c0933e"
-
+const BIN_ID = ""
 const Master_Key = ""
 
 let init = function() {
     let req = new XMLHttpRequest();
-
     req.onreadystatechange = () => {
         if (req.readyState == XMLHttpRequest.DONE) {
-            // console.log(req.responseText);
             todoList = JSON.parse(req.responseText).record;
-            if (todoList.dupa === "dupa")
+            if (todoList[0].placeholder) {
                 todoList = []
-            console.log(todoList)
+            }
+            updateTodoList();
         }
     };
-
     req.open("GET", `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, true);
     req.setRequestHeader("X-Master-Key", `${Master_Key}`);
     req.send();
-}
-
-init();
+};
 
 let updateJSONbin = function() {
-    // ciało funkcji na podstawie https://jsonbin.io/api-reference/bins/update
-    // UWAGA: ta funkcja zastepuje całą zawartość bina
     let req = new XMLHttpRequest();
-
     req.onreadystatechange = () => {
-    if (req.readyState == XMLHttpRequest.DONE) {
-        console.log(req.responseText);
-    }
+        if (req.readyState == XMLHttpRequest.DONE) {
+            console.log(req.responseText);
+        }
     };
-
     req.open("PUT", `https://api.jsonbin.io/v3/b/${BIN_ID}`, true);
     req.setRequestHeader("Content-Type", "application/json");
     req.setRequestHeader("X-Master-Key", `${Master_Key}`);
-    let dupa 
-    console.log(todoList)
-    if (todoList.length) {
-        dupa = todoList 
-    } else {
-        dupa = {};
-        dupa.dupa= "dupa"
-    }
-    req.send(JSON.stringify(dupa));
-}
-
+    let dataToSend = todoList.length ? todoList : [{ placeholder: "empty" }];
+    req.send(JSON.stringify(dataToSend));
+};
 
 let updateTodoList = function() {
-    //add all elements
-    let filterInput = document.getElementById("inputSearch");   
+    let filterInput = document.getElementById("inputSearch").value.toLowerCase();
     const tableBody = document.querySelector('#json-table tbody');
-
-    // Clear any existing rows
     tableBody.innerHTML = '';
-    for (let todo in todoList) {
-        if (
-            (filterInput.value == "") ||
-            (todoList[todo].title.includes(filterInput.value)) ||
-            (todoList[todo].description.includes(filterInput.value))
-        ) {
+    todoList.forEach((todo, index) => {
+        if (!filterInput || todo.title.toLowerCase().includes(filterInput) || todo.description.toLowerCase().includes(filterInput)) {
             const row = document.createElement('tr');
-
-            const title = document.createElement('td');
-            const description = document.createElement('td');
-            const place = document.createElement('td');
-            const dueDate = document.createElement('td');
-        
-            title.textContent = todoList[todo].title;
-            description.textContent = todoList[todo].description;
-            place.textContent = todoList[todo].place;
-            dueDate.textContent = todoList[todo].dueDate;
             
+            const title = document.createElement('td');
+            title.textContent = todo.title;
             row.appendChild(title);
+            
+            const description = document.createElement('td');
+            description.textContent = todo.description;
             row.appendChild(description);
+            
+            const place = document.createElement('td');
+            place.textContent = todo.place;
             row.appendChild(place);
+            
+            const dueDate = document.createElement('td');
+            dueDate.textContent = new Date(todo.dueDate).toLocaleDateString();
             row.appendChild(dueDate);
-
-            let newDeleteButton = document.createElement("input");
-            newDeleteButton.type = "button";
-            newDeleteButton.value = "x";
-            newDeleteButton.addEventListener("click",
-                function() {
-                    deleteTodo(todo);
-                });
-            row.append(newDeleteButton)
-
+            
+            const actionsCell = document.createElement('td');
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn btn-danger btn-sm";
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = () => deleteTodo(index);
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
+            
             tableBody.appendChild(row);
-
-            }
         }
-    }
-
-setInterval(updateTodoList, 1000);
+    });
+};
 
 let deleteTodo = function(index) {
-    todoList.splice(index,1);
+    todoList.splice(index, 1);
     updateJSONbin();
-}
+    updateTodoList();
+};
 
 let addTodo = function() {
-    //get the elements in the form
-      let inputTitle = document.getElementById("inputTitle");
-      let inputDescription = document.getElementById("inputDescription");
-      let inputPlace = document.getElementById("inputPlace");
-      let inputDate = document.getElementById("inputDate");
-    //get the values from the form
-      let newTitle = inputTitle.value;
-      let newDescription = inputDescription.value;
-      let newPlace = inputPlace.value;
-      let newDate = new Date(inputDate.value);
-    //create new item
-      let newTodo = {
-          title: newTitle,
-          description: newDescription,
-          place: newPlace,
-          category: '',
-          dueDate: newDate
-      };
-    //add item to the list
+    let newTodo = {
+        title: document.getElementById("inputTitle").value,
+        description: document.getElementById("inputDescription").value,
+        place: document.getElementById("inputPlace").value,
+        dueDate: document.getElementById("inputDate").value
+    };
     todoList.push(newTodo);
     updateJSONbin();
-  }
+    updateTodoList();
+};
+
+init();
+setInterval(updateTodoList, 1000);
