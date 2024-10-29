@@ -26,7 +26,48 @@ let initList = function() {
     }
 }
 
-initList();
+//initList();
+
+
+const BIN_ID = "672108bead19ca34f8c0933e"
+
+const Master_Key = ""
+
+let init = function() {
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = () => {
+        if (req.readyState == XMLHttpRequest.DONE) {
+            // console.log(req.responseText);
+            todoList = JSON.parse(req.responseText).record;
+            console.log(todoList)
+        }
+    };
+
+    req.open("GET", `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, true);
+    req.setRequestHeader("X-Master-Key", `${Master_Key}`);
+    req.send();
+}
+
+init();
+
+let updateJSONbin = function() {
+    // ciało funkcji na podstawie https://jsonbin.io/api-reference/bins/update
+    // UWAGA: ta funkcja zastepuje całą zawartość bina
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = () => {
+    if (req.readyState == XMLHttpRequest.DONE) {
+        console.log(req.responseText);
+    }
+    };
+
+    req.open("PUT", `https://api.jsonbin.io/v3/b/${BIN_ID}`, true);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.setRequestHeader("X-Master-Key", `${Master_Key}`);
+    req.send(JSON.stringify(todoList));
+}
+
 
 let updateTodoList = function() {
     let todoListDiv =
@@ -69,6 +110,7 @@ setInterval(updateTodoList, 1000);
 
 let deleteTodo = function(index) {
     todoList.splice(index,1);
+    updateJSONbin();
 }
 
 let addTodo = function() {
@@ -92,5 +134,5 @@ let addTodo = function() {
       };
     //add item to the list
       todoList.push(newTodo);
-      window.localStorage.setItem("todos", JSON.stringify(todoList));
+    updateJSONbin();
   }
