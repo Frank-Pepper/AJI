@@ -1,33 +1,7 @@
 "use strict"
 let todoList = []; //declares a new array for Your todo list
 
-let initList = function() {
-    let savedList = window.localStorage.getItem("todos");
-    if (savedList != null)
-        todoList = JSON.parse(savedList);
-    else {
-        todoList.push(
-        {
-            title: "Learn JS",
-            description: "Create a demo application for my TODO's",
-            place: "445",
-            category: '',
-            dueDate: new Date(2024,10,16)
-        },
-        {
-            title: "Lecture test",
-            description: "Quick test from the first three lectures",
-            place: "F6",
-            category: '',
-            dueDate: new Date(2024,10,17)
-        }
-            // of course the lecture test mentioned above will not take place
-        );
-    }
-}
-
 //initList();
-
 
 const BIN_ID = "672108bead19ca34f8c0933e"
 
@@ -40,6 +14,8 @@ let init = function() {
         if (req.readyState == XMLHttpRequest.DONE) {
             // console.log(req.responseText);
             todoList = JSON.parse(req.responseText).record;
+            if (todoList.dupa === "dupa")
+                todoList = []
             console.log(todoList)
         }
     };
@@ -65,46 +41,62 @@ let updateJSONbin = function() {
     req.open("PUT", `https://api.jsonbin.io/v3/b/${BIN_ID}`, true);
     req.setRequestHeader("Content-Type", "application/json");
     req.setRequestHeader("X-Master-Key", `${Master_Key}`);
-    req.send(JSON.stringify(todoList));
+    let dupa 
+    console.log(todoList)
+    if (todoList.length) {
+        dupa = todoList 
+    } else {
+        dupa = {};
+        dupa.dupa= "dupa"
+    }
+    req.send(JSON.stringify(dupa));
 }
 
 
 let updateTodoList = function() {
-    let todoListDiv =
-    document.getElementById("todoListView");
-
-    //remove all elements
-    while (todoListDiv.firstChild) {
-        todoListDiv.removeChild(todoListDiv.firstChild);
-    }
-
     //add all elements
     let filterInput = document.getElementById("inputSearch");   
+    const tableBody = document.querySelector('#json-table tbody');
+
+    // Clear any existing rows
+    tableBody.innerHTML = '';
     for (let todo in todoList) {
-    if (
-        (filterInput.value == "") ||
-        (todoList[todo].title.includes(filterInput.value)) ||
-        (todoList[todo].description.includes(filterInput.value))
-    ) {
-        let newElement = document.createElement("p");
-        let newContent = document.createTextNode(todoList[todo].title + " " +
-                                            todoList[todo].description + " " +
-                                            todoList[todo].place + " " +
-                                            todoList[todo].dueDate + " " );
-        let newDeleteButton = document.createElement("input");
+        if (
+            (filterInput.value == "") ||
+            (todoList[todo].title.includes(filterInput.value)) ||
+            (todoList[todo].description.includes(filterInput.value))
+        ) {
+            const row = document.createElement('tr');
+
+            const title = document.createElement('td');
+            const description = document.createElement('td');
+            const place = document.createElement('td');
+            const dueDate = document.createElement('td');
+        
+            title.textContent = todoList[todo].title;
+            description.textContent = todoList[todo].description;
+            place.textContent = todoList[todo].place;
+            dueDate.textContent = todoList[todo].dueDate;
+            
+            row.appendChild(title);
+            row.appendChild(description);
+            row.appendChild(place);
+            row.appendChild(dueDate);
+
+            let newDeleteButton = document.createElement("input");
             newDeleteButton.type = "button";
             newDeleteButton.value = "x";
             newDeleteButton.addEventListener("click",
                 function() {
                     deleteTodo(todo);
                 });
-                                            
-        newElement.appendChild(newContent);
-        newElement.appendChild(newDeleteButton);
-        todoListDiv.appendChild(newElement);
+            row.append(newDeleteButton)
+
+            tableBody.appendChild(row);
+
+            }
+        }
     }
-    }
-}
 
 setInterval(updateTodoList, 1000);
 
@@ -133,6 +125,6 @@ let addTodo = function() {
           dueDate: newDate
       };
     //add item to the list
-      todoList.push(newTodo);
+    todoList.push(newTodo);
     updateJSONbin();
   }

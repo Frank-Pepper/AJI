@@ -7,6 +7,9 @@
     </head>
     <body>
         <h1>MyNotes</h1>
+                <!-- Rows will be inserted here dynamically -->
+            </tbody>
+        </table>
         <form>
             <label>Title</label>
             <input type="text" id="inputTitle"/>
@@ -19,6 +22,16 @@
             <input type="button" value="add"
             onclick="addTodo()"/>
         </form>
+        <table id="json-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Place</th>
+                    <th>Due date</th>
+                </tr>
+            </thead>
+            <tbody>
         <div>
             <label>Search</label>
             <input type="text" id="inputSearch" placeholder="Type Your seach here..."/>
