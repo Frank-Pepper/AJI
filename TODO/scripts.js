@@ -36,10 +36,16 @@ let updateJSONbin = function() {
 
 let updateTodoList = function() {
     let filterInput = document.getElementById("inputSearch").value.toLowerCase();
+    let beginDate = new Date(document.getElementById("beginDate").value);
+    let endDate = new Date(document.getElementById("endDate").value);
+
     const tableBody = document.querySelector('#json-table tbody');
     tableBody.innerHTML = '';
     todoList.forEach((todo, index) => {
-        if (!filterInput || todo.title.toLowerCase().includes(filterInput) || todo.description.toLowerCase().includes(filterInput)) {
+        let todoDate = new Date(todo.dueDate);
+        if ((!filterInput || todo.title.toLowerCase().includes(filterInput) || todo.description.toLowerCase().includes(filterInput))
+            && (isNaN(beginDate) || (!isNaN(beginDate) && beginDate <= todoDate)) && (isNaN(endDate) || (!isNaN(endDate) && endDate >= todoDate))        
+        ) {
             const row = document.createElement('tr');
             
             const title = document.createElement('td');
