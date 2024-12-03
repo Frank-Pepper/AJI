@@ -7,19 +7,32 @@ const ordersRouter = new Router();
 
 // Pobierz wszystkie zamówienia
 ordersRouter.get("/orders", async (ctx: Context) => {
-    const result = await client.query("SELECT * FROM Orders");
-    ctx.response.body = result;
+    try{
+        const result = await client.query("SELECT * FROM Orders");
+        ctx.response.body = result;
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
   
 // Pobierz zamówienia dla konkretnej nazwy użytkownika
 ordersRouter.get("/orders/user/:username", async (ctx: Context) => {
+    try {
     const username = ctx.params.username;
     const result = await client.query("SELECT * FROM Orders WHERE username = ?", [username]);
     ctx.response.body = result;
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
   
 // Pobierz zamówienie po ID
 ordersRouter.get("/orders/:id", async (ctx: Context) => {
+    try {
     const id = ctx.params.id;
     const result = await client.query("SELECT * FROM Orders WHERE id = ?", [id]);
 
@@ -29,10 +42,16 @@ ordersRouter.get("/orders/:id", async (ctx: Context) => {
     } else {
         ctx.response.body = result[0];
     }
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
 
 // Dodaj zamówienie
 ordersRouter.post("/orders", async (ctx: Context) => {
+    try {
     const { confirmation_date, status_id, username, email, phone_number } = await ctx.request.body().value;
     await client.execute(
         "INSERT INTO Orders (confirmation_date, status_id, username, email, phone_number) VALUES (?, ?, ?, ?, ?)",
@@ -40,10 +59,16 @@ ordersRouter.post("/orders", async (ctx: Context) => {
     );
     ctx.response.status = 201;
     ctx.response.body = { message: "Order added successfully" };
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
 
 // Zmień stan zamówienia (z walidacją)
 ordersRouter.patch("/orders/:id", async (ctx: Context) => {
+    try {
     const id = ctx.params.id;
     const { status_id } = await ctx.request.body().value;
 
@@ -73,13 +98,24 @@ ordersRouter.patch("/orders/:id", async (ctx: Context) => {
     // Aktualizacja stanu
     await client.execute("UPDATE Orders SET status_id = ? WHERE id = ?", [status_id, id]);
     ctx.response.body = { message: "Order status updated successfully" };
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
 
 // Pobierz zamówienia wg stanu
 ordersRouter.get("/orders/status/:id", async (ctx: Context) => {
+    try {
     const status_id = ctx.params.id;
     const result = await client.query("SELECT * FROM Orders WHERE status_id = ?", [status_id]);
     ctx.response.body = result;
+    } catch (error) {
+        console.error("Error inserting product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
 });
 
 export default ordersRouter;
