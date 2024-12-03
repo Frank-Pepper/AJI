@@ -1,4 +1,5 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { Router } from "jsr:@oak/oak/router";
 import { Client } from "https://deno.land/x/mysql/mod.ts";
 
 // Load environment variables
@@ -34,6 +35,39 @@ router.get("/products/:id", async (ctx) => {
     ctx.response.body = { message: "Product not found" };
   } else {
     ctx.response.body = result[0];  // Return the first product if found
+  }
+});
+
+router.post("/products", async (ctx) => {
+  try {
+    // Parse the JSON body
+    const body = await ctx.request.body.json();
+    const { name, description, unit_price, unit_weight, category_id } = body;
+
+    // Validate the input
+    if (!name || !unit_price || !unit_weight || !category_id) {
+      ctx.response.status = 400;
+      ctx.response.body = { message: "Missing required fields" };
+      return;
+    }
+
+    // Insert data into the Products table
+    await client.query(
+      "INSERT INTO Products (name, description, unit_price, unit_weight, category_id) VALUES (?, ?, ?, ?, ?)",
+      [name,
+      description,
+      unit_price,
+      unit_weight,
+      category_id]
+    );
+
+    // Send success response
+    ctx.response.status = 201;
+    ctx.response.body = { message: "Product created successfully" };
+  } catch (error) {
+    console.error("Error inserting product:", error);
+    ctx.response.status = 500;
+    ctx.response.body = { message: "Error creating product" };
   }
 });
 
