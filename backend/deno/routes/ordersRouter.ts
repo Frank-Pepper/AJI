@@ -1,24 +1,25 @@
 import { Router } from "jsr:@oak/oak/router";
+import { Context } from "jsr:@oak/oak/context";
 
 import { client } from "../db.ts";
 
 const ordersRouter = new Router();
 
 // Pobierz wszystkie zamówienia
-ordersRouter.get("/orders", async (ctx) => {
+ordersRouter.get("/orders", async (ctx: Context) => {
     const result = await client.query("SELECT * FROM Orders");
     ctx.response.body = result;
 });
   
 // Pobierz zamówienia dla konkretnej nazwy użytkownika
-ordersRouter.get("/orders/user/:username", async (ctx) => {
+ordersRouter.get("/orders/user/:username", async (ctx: Context) => {
     const username = ctx.params.username;
     const result = await client.query("SELECT * FROM Orders WHERE username = ?", [username]);
     ctx.response.body = result;
 });
   
 // Pobierz zamówienie po ID
-ordersRouter.get("/orders/:id", async (ctx) => {
+ordersRouter.get("/orders/:id", async (ctx: Context) => {
     const id = ctx.params.id;
     const result = await client.query("SELECT * FROM Orders WHERE id = ?", [id]);
 
@@ -31,7 +32,7 @@ ordersRouter.get("/orders/:id", async (ctx) => {
 });
 
 // Dodaj zamówienie
-ordersRouter.post("/orders", async (ctx) => {
+ordersRouter.post("/orders", async (ctx: Context) => {
     const { confirmation_date, status_id, username, email, phone_number } = await ctx.request.body().value;
     await client.execute(
         "INSERT INTO Orders (confirmation_date, status_id, username, email, phone_number) VALUES (?, ?, ?, ?, ?)",
@@ -42,7 +43,7 @@ ordersRouter.post("/orders", async (ctx) => {
 });
 
 // Zmień stan zamówienia (z walidacją)
-ordersRouter.patch("/orders/:id", async (ctx) => {
+ordersRouter.patch("/orders/:id", async (ctx: Context) => {
     const id = ctx.params.id;
     const { status_id } = await ctx.request.body().value;
 
@@ -75,7 +76,7 @@ ordersRouter.patch("/orders/:id", async (ctx) => {
 });
 
 // Pobierz zamówienia wg stanu
-ordersRouter.get("/orders/status/:id", async (ctx) => {
+ordersRouter.get("/orders/status/:id", async (ctx: Context) => {
     const status_id = ctx.params.id;
     const result = await client.query("SELECT * FROM Orders WHERE status_id = ?", [status_id]);
     ctx.response.body = result;

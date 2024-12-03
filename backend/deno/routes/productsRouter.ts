@@ -55,6 +55,45 @@ productRouter.post("/products", async (ctx: Context) => {
         ctx.response.body = { message: "Error creating product" };
 }});
 
+async function update(ctx: Context, body) {
+    const { name, description, unit_price, unit_weight, category_id, id } = body;
+
+    // Validate the input
+    if (!name || !unit_price || !unit_weight || !category_id || !id) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "Missing required fields" };
+        return;
+    }
+
+    // Insert data into the Products table
+    await client.query(
+        `UPDATE Products SET name = ?, description = ?, unit_price = ?, unit_weight = ?, category_id = ? WHERE id = ?`,
+        [name,
+        description,
+        unit_price,
+        unit_weight,
+        category_id, id]
+    );
+}
+
+productRouter.put("/products", async (ctx: Context) => {
+    try {
+        const body = await ctx.request.body.json();
+        console.log(body);
+        for (var product of body) {
+            update(ctx, product);
+        }
+        ctx.response.status = 200; // OK
+        ctx.response.body = { message: "Products updated successfully" };
+    } catch(error) {
+        console.error("Error updating product:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { message: "Error creating product" };
+    }
+
+});
+
+
 productRouter.put("/products/:id", async (ctx: Context) => {
     try {
         // Parse the JSON body
@@ -76,7 +115,7 @@ productRouter.put("/products/:id", async (ctx: Context) => {
             unit_weight,
             category_id, id]
         );
-        
+
         ctx.response.status = 200; // OK
         ctx.response.body = { message: "Product updated successfully" };
 
