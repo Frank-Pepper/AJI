@@ -9,7 +9,7 @@ const categoriesRouter = new Router();
 categoriesRouter.get("/categories", async (ctx: Context) => {
     try {
         const result = await client.query("SELECT * FROM Categories");
-    ctx.response.body = result;
+        ctx.response.body = result;
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;

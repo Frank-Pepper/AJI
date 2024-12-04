@@ -7,8 +7,8 @@ const productRouter = new Router();
 
 productRouter.get("/products", async (ctx: Context) => {
     try {
-    const result = await client.query("SELECT * FROM Products");
-    ctx.response.body = result;
+        const result = await client.query("SELECT * FROM Products");
+        ctx.response.body = result;
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
@@ -19,15 +19,15 @@ productRouter.get("/products", async (ctx: Context) => {
 // Route to fetch a single product by ID
 productRouter.get("/products/:id", async (ctx: Context) => {
     try {
-    const id = ctx.params.id;  // Get the 'id' from URL params
-    const result = await client.query("SELECT * FROM Products WHERE id = ?", [id]);
+        const id = ctx.params.id;  // Get the 'id' from URL params
+        const result = await client.query("SELECT * FROM Products WHERE id = ?", [id]);
 
-    if (result.length === 0) {
-        ctx.response.status = 404;
-        ctx.response.body = { message: "Product not found" };
-    } else {
-        ctx.response.body = result[0];  // Return the first product if found
-    }
+        if (result.length === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Product not found" };
+        } else {
+            ctx.response.body = result[0];  // Return the first product if found
+        }
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
@@ -36,7 +36,6 @@ productRouter.get("/products/:id", async (ctx: Context) => {
 
 productRouter.post("/products", async (ctx: Context) => {
     try {
-        // Parse the JSON body
         const body = await ctx.request.body.json();
         const { name, description, unit_price, unit_weight, category_id } = body;
 
@@ -90,10 +89,11 @@ async function update(ctx: Context, body) {
 productRouter.put("/products", async (ctx: Context) => {
     try {
         const body = await ctx.request.body.json();
-        console.log(body);
+
         for (var product of body) {
             update(ctx, product);
         }
+
         ctx.response.status = 200; // OK
         ctx.response.body = { message: "Products updated successfully" };
     } catch(error) {

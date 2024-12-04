@@ -20,9 +20,9 @@ ordersRouter.get("/orders", async (ctx: Context) => {
 // Pobierz zamówienia dla konkretnej nazwy użytkownika
 ordersRouter.get("/orders/user/:username", async (ctx: Context) => {
     try {
-    const username = ctx.params.username;
-    const result = await client.query("SELECT * FROM Orders WHERE username = ?", [username]);
-    ctx.response.body = result;
+        const username = ctx.params.username;
+        const result = await client.query("SELECT * FROM Orders WHERE username = ?", [username]);
+        ctx.response.body = result;
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
@@ -33,15 +33,15 @@ ordersRouter.get("/orders/user/:username", async (ctx: Context) => {
 // Pobierz zamówienie po ID
 ordersRouter.get("/orders/:id", async (ctx: Context) => {
     try {
-    const id = ctx.params.id;
-    const result = await client.query("SELECT * FROM Orders WHERE id = ?", [id]);
+        const id = ctx.params.id;
+        const result = await client.query("SELECT * FROM Orders WHERE id = ?", [id]);
 
-    if (result.length === 0) {
-        ctx.response.status = 404;
-        ctx.response.body = { message: "Order not found" };
-    } else {
-        ctx.response.body = result[0];
-    }
+        if (result.length === 0) {
+            ctx.response.status = 404;
+            ctx.response.body = { message: "Order not found" };
+        } else {
+            ctx.response.body = result[0];
+        }
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
@@ -68,8 +68,7 @@ ordersRouter.post("/orders", async (ctx: Context) => {
 });
 
 async function patch(ctx: Context, body) {
-
-    const { status_id } = await ctx.request.body().value;
+    const { status_id , id } = body;
 
     // Pobierz bieżący stan zamówienia
     const currentOrder = await client.query("SELECT status_id FROM Orders WHERE id = ?", [id]);
@@ -118,37 +117,14 @@ ordersRouter.patch("/orders", async (ctx: Context) => {
 // Zmień stan zamówienia (z walidacją)
 ordersRouter.patch("/orders/:id", async (ctx: Context) => {
     try {
-    const id = ctx.params.id;
-    const { status_id } = await ctx.request.body().value;
+        const id = ctx.params.id;
+        const body = await ctx.request.body.json();
+        body['id'] = id;
 
-    // Pobierz bieżący stan zamówienia
-    const currentOrder = await client.query("SELECT status_id FROM Orders WHERE id = ?", [id]);
+        patch(ctx, body);
 
-    if (currentOrder.length === 0) {
-        ctx.response.status = 404;
-        ctx.response.body = { message: "Order not found" };
-        return;
-    }
-
-    const currentStatus = currentOrder[0].status_id;
-
-    // Walidacja przejść stanu
-    const invalidTransitions = {
-        3: [4], // ANULOWANE -> nie można przejść na ZREALIZOWANE
-        4: [1, 2, 3], // ZREALIZOWANE -> nie można zmienić stanu
-    };
-
-    if (invalidTransitions[currentStatus]?.includes(status_id)) {
-        ctx.response.status = 400;
-        ctx.response.body = { message: "Invalid status transition" };
-        return;
-    }
-
-    // Aktualizacja stanu
-    await client.execute("UPDATE Orders SET status_id = ? WHERE id = ?", [status_id, id]);
-
-    ctx.response.status = 200; // OK
-    ctx.response.body = { message: "Order status updated successfully" };
+        ctx.response.status = 200; // OK
+        ctx.response.body = { message: "Order status updated successfully" };
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
@@ -159,9 +135,9 @@ ordersRouter.patch("/orders/:id", async (ctx: Context) => {
 // Pobierz zamówienia wg stanu
 ordersRouter.get("/orders/status/:id", async (ctx: Context) => {
     try {
-    const status_id = ctx.params.id;
-    const result = await client.query("SELECT * FROM Orders WHERE status_id = ?", [status_id]);
-    ctx.response.body = result;
+        const status_id = ctx.params.id;
+        const result = await client.query("SELECT * FROM Orders WHERE status_id = ?", [status_id]);
+        ctx.response.body = result;
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = 500;
