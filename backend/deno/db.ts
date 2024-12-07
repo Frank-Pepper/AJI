@@ -1,4 +1,4 @@
-import { Client } from "https://deno.land/x/mysql/mod.ts";
+import { Client } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
 
 // Load environment variables
 const DB_HOST = "127.0.0.1";
