@@ -7,11 +7,16 @@ import { client } from "../db.ts";
 interface Order {
     confirmation_date: string;
     id: string;
-    status_id: number;        
+    status_id: string;        
     username: string;         
     email: string;            
     phone_number: string;     
   }
+
+const NIEZATWIERDZONE :string = "NIEZATWIERDZONE"
+const ZATWIERDZONE :string ="ZATWIERDZONE"   
+const ANULOWANE :string = "ANULOWANE"      
+const ZREALIZOWANE :string = "ZREALIZOWANE"   
 
 const ordersRouter = new Router();
 
@@ -62,7 +67,8 @@ ordersRouter.get("/orders/:id", async (ctx: RouterContext<string>) => {
 ordersRouter.post("/orders", async (ctx: RouterContext<string>) => {
     try {
         const body: Order = await ctx.request.body.json();
-        const { confirmation_date, status_id, username, email, phone_number } = body;
+        const { confirmation_date, username, email, phone_number } = body;
+        const status_id = NIEZATWIERDZONE;
 
         if (!username || !email || !phone_number) {
             ctx.response.status = STATUS_CODE.BadRequest;
@@ -114,9 +120,10 @@ async function patch(ctx: RouterContext<string>, body: Order) {
     const currentStatus: string = currentOrder[0].status_id;
 
     // Walidacja przejść stanu
-    const invalidTransitions: { [key: string]: number[] }= {
-        "3": [4], // ANULOWANE -> nie można przejść na ZREALIZOWANE
-        "4": [1, 2, 3], // ZREALIZOWANE -> nie można zmienić stanu
+    const invalidTransitions: { [key: string]: string[] }= {
+        NIEZATWIERDZONE: [ZREALIZOWANE],
+        ANULOWANE: [ZREALIZOWANE], // ANULOWANE -> nie można przejść na ZREALIZOWANE
+        ZREALIZOWANE: [NIEZATWIERDZONE, ZATWIERDZONE, ANULOWANE], // ZREALIZOWANE -> nie można zmienić stanu
     };
     const val: boolean = invalidTransitions[currentStatus]?.includes(status_id)
 
@@ -134,13 +141,32 @@ async function patch(ctx: RouterContext<string>, body: Order) {
 ordersRouter.patch("/orders", async (ctx: RouterContext<string>) => {
     try {
         const body: Order[] = await ctx.request.body.json();
+        const failed: Order[] = [];
         console.log(body);
         let order: Order;
         for (order of body) {
             await patch(ctx, order);
+            if (ctx.response.status != 200) {
+                failed.push(order);
+            }
+            ctx.response.status = STATUS_CODE.OK; // OK
         }
-        ctx.response.status = STATUS_CODE.OK; // OK
-        ctx.response.body = { message: "Products updated successfully" };
+
+        if (body.length == failed.length) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "No products updated successfully",
+                failed: failed
+            };
+        } else {
+            ctx.response.status = STATUS_CODE.OK; // OK
+            if (failed.length == 0) {
+                ctx.response.body = { message: "Products updated successfully",
+                    failed: failed
+                };
+            } else {
+                ctx.response.body = { message: "Products updated successfully" };
+            }
+        }
     } catch(error) {
         console.error("Error updating product:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
@@ -153,9 +179,14 @@ ordersRouter.patch("/orders/:id", async (ctx: RouterContext<string>) => {
     try {
         const id = ctx.params.id;
         const body: Order = await ctx.request.body.json();
+        if (Array.isArray(body)) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Array in body instead of single order" };
+            return;
+        }
         body['id'] = id;
 
-        patch(ctx, body);
+        await patch(ctx, body);
 
         ctx.response.status = STATUS_CODE.OK; // OK
         ctx.response.body = { message: "Order status updated successfully" };
