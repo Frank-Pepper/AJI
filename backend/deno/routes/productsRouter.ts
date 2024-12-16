@@ -3,6 +3,7 @@ import { RouterContext } from "@oak/oak/router";
 import { STATUS_CODE } from "jsr:@oak/commons@1/status";
 
 import { client } from "../db.ts";
+import { apiKey } from "../.env"
 
 interface Product {
     id: number;
@@ -143,5 +144,59 @@ productRouter.put("/products/:id", async (ctx: RouterContext<string>) => {
         ctx.response.body = { message: "Error creating product" };
     }
 })
+
+productRouter.get("/products/:id/seo-description", async (ctx: RouterContext<string>) => {
+    try {
+        // Parse the JSON body
+        const id = ctx.params.id;
+
+        const result = await client.query("SELECT * FROM Products WHERE id = ?", [id]);        
+        const product = result[0];
+        console.log(product)
+        
+        const seoDescription = await addDescription(JSON.stringify(product))
+
+        ctx.response.status = STATUS_CODE.OK; // OK
+        ctx.response.body = seoDescription;
+    } catch(error) {
+        console.error("Error updating product:", error);
+        ctx.response.status = STATUS_CODE.InternalServerError;
+        ctx.response.body = { message: "Error creating product" };
+    }
+})
+
+async function addDescription(product: string) {
+    
+    const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+
+    const requestBody = {
+        messages: [
+        { role: "system", content: "The description should: Be informative and persuasive for potential buyers. Highlight key features such as performance, design, and reliability.Be structured in HTML, including an appropriate title (<h1>), a price paragraph (<p>), and other relevant details that enhance SEO. Only html, add doctype so it could render, price is in $ weight in kg" },
+        { role: "user", content: `${product}` }
+        ],
+        model: "llama3-8b-8192"
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const description = data.choices[0].message.content.trim(); // Adjust based on response structure
+        return description;
+    } catch (error) {
+        console.error("An error occurred:", error);
+    }
+}
 
 export default productRouter;
