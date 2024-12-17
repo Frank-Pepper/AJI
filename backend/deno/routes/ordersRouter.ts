@@ -63,12 +63,14 @@ ordersRouter.get("/orders/:id", async (ctx: RouterContext<string>) => {
         ctx.response.body = { message: "Error creating product" };
     }
 });
+
 // Dodaj zamówienie
 ordersRouter.post("/orders", async (ctx: RouterContext<string>) => {
     try {
         const body: Order = await ctx.request.body.json();
-        const { confirmation_date, username, email, phone_number } = body;
+        const { username, email, phone_number } = body;
         const status_id = NIEZATWIERDZONE;
+        // const confirmation_date = new Date("1970-01-01T00:00:00Z");
 
         if (!username || !email || !phone_number) {
             ctx.response.status = STATUS_CODE.BadRequest;
@@ -92,12 +94,13 @@ ordersRouter.post("/orders", async (ctx: RouterContext<string>) => {
             return;
         }
 
-        await client.execute(
-            "INSERT INTO Orders (confirmation_date, status_id, username, email, phone_number) VALUES (?, ?, ?, ?, ?)",
-            [confirmation_date, status_id, username, email, phone_number],
+        const result = await client.execute(
+            "INSERT INTO Orders (status_id, username, email, phone_number) VALUES (?, ?, ?, ?)",
+            [status_id, username, email, phone_number],
         );
+        console.log(result)
         ctx.response.status = STATUS_CODE.Created;
-        ctx.response.body = { message: "Order added successfully" };
+        ctx.response.body = { message: `Order added successfully, id: ${result.lastInsertId}` };
     } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
@@ -134,7 +137,13 @@ async function patch(ctx: RouterContext<string>, body: Order) {
     }
 
     // Aktualizacja stanu
-    await client.execute("UPDATE Orders SET status_id = ? WHERE id = ?", [status_id, id]);
+    if (status_id == ZATWIERDZONE) {
+        const confirmation_date = new Date();
+        await client.execute("UPDATE Orders SET status_id = ?, confirmation_date = ? WHERE id = ?", [status_id, confirmation_date, id]);
+    } else {
+        await client.execute("UPDATE Orders SET status_id = ? WHERE id = ?", [status_id, id]);
+    }
+    
 
 }
 
