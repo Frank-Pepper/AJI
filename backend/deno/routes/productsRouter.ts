@@ -27,6 +27,19 @@ productRouter.get("/products", async (ctx: RouterContext<string>) => {
     }
 });
 
+function validate(product: Product) {
+    if (!product.name ||
+        !product.description ||
+        !product.unit_price ||
+        !product.unit_weight ||
+        !product.category_id ||
+        product.unit_price <= 0 ||
+        product.unit_weight <= 0) {
+        return 0
+      }
+    return 1
+}
+
 // Route to fetch a single product by ID
 productRouter.get("/products/:id", async (ctx: RouterContext<string>) => {
     try {
@@ -47,46 +60,34 @@ productRouter.get("/products/:id", async (ctx: RouterContext<string>) => {
 
 productRouter.post("/products", async (ctx: RouterContext<string>) => {
     try {
-        const body: Product = await ctx.request.body.json();
-        const { name, description, unit_price, unit_weight, category_id } = body;
-
+        const product: Product = await ctx.request.body.json();
         // Validate the input
-        if (!name || !unit_price || !unit_weight || !category_id) {
-            ctx.response.status = STATUS_CODE.BadRequest;
-            ctx.response.body = { message: "Missing required fields" };
-            return;
-        }
 
-        if (unit_price <= 0 || unit_weight <= 0) {
+        if (!validate(product)) {
             ctx.response.status = STATUS_CODE.BadRequest;
             ctx.response.body = { message: "Missing required fields" };
             return;
         }
 
         // Insert data into the Products table
-        await client.query(
+        const result = await client.query(
             "INSERT INTO Products (name, description, unit_price, unit_weight, category_id) VALUES (?, ?, ?, ?, ?)",
-            [name,
-            description,
-            unit_price,
-            unit_weight,
-            category_id]
+            [product.name, product.description, product.unit_price, product.unit_weight, product.category_id,]
         );
 
         // Send success response
         ctx.response.status = STATUS_CODE.Created;
-        ctx.response.body = { message: "Product created successfully" };
+        ctx.response.body = { message: `Product created successfully, id: ${result.lastInsertId}` };
   } catch (error) {
         console.error("Error inserting product:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
         ctx.response.body = { message: "Error creating product" };
 }});
 
-async function update(ctx: RouterContext<string>, body: Product) {
-    const { name, description, unit_price, unit_weight, category_id, id } = body;
+async function update(ctx: RouterContext<string>, product: Product) {
 
     // Validate the input
-    if (!name || !unit_price || !unit_weight || !category_id || !id) {
+    if (!validate(product) || !product.id) {
         ctx.response.status = STATUS_CODE.BadRequest;
         ctx.response.body = { message: "Missing required fields" };
         return;
@@ -95,15 +96,11 @@ async function update(ctx: RouterContext<string>, body: Product) {
     // Insert data into the Products table
     const result = await client.query(
         `UPDATE Products SET name = ?, description = ?, unit_price = ?, unit_weight = ?, category_id = ? WHERE id = ?`,
-        [name,
-        description,
-        unit_price,
-        unit_weight,
-        category_id, id]
+        [product.name, product.description, product.unit_price, product.unit_weight, product.category_id, product.id]
     );
 
     if (result.affectedRows  === 0) {
-        ctx.response.status = STATUS_CODE.BadRequest;
+        ctx.response.status = STATUS_CODE.NotFound;
         ctx.response.body = { message: "Product not found" };
     }
 }
@@ -111,13 +108,31 @@ async function update(ctx: RouterContext<string>, body: Product) {
 productRouter.put("/products", async (ctx: RouterContext<string>) => {
     try {
         const body: Product[] = await ctx.request.body.json();
+        const failed: Product[] = []
         let product: Product
         for (product of body) {
             await update(ctx, product);
+            if (ctx.response.status != 200) {
+                failed.push(product);
+            }
+            ctx.response.status = STATUS_CODE.OK; // OK
         }
 
-        ctx.response.status = STATUS_CODE.OK; // OK
-        ctx.response.body = { message: "Products updated successfully" };
+        if (body.length == failed.length) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "No products updated successfully",
+                failed: failed
+            };
+        } else {
+            ctx.response.status = STATUS_CODE.OK; // OK
+            if (failed.length == 0) {
+                ctx.response.body = { message: "Products updated successfully",
+                    failed: failed
+                };
+            } else {
+                ctx.response.body = { message: "Products updated successfully" };
+            }
+        }
     } catch(error) {
         console.error("Error updating product:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
@@ -206,65 +221,53 @@ async function addDescription(product: string) {
   // Endpoint POST /init do inicjalizacji danych towarów
   productRouter.post("/init", async (ctx: RouterContext<string>) => {
     try {
-      // Sprawdzenie, czy produkty już istnieją w bazie
-      const productsExist = await client.query("SELECT COUNT(*) AS count FROM Products");
-      if (productsExist[0].count > 0) {
-        ctx.response.status = STATUS_CODE.BadRequest;
-        ctx.response.body = { message: "Products already exist in the database" };
-        return;
-      }
-  
-      // Wczytanie pliku JSON z żądania
-      const body = await ctx.request.body.json();
-      const products: Product[] = body;
-  
-      if (!Array.isArray(products)) {
-        ctx.response.status = STATUS_CODE.BadRequest;
-        ctx.response.body = { message: "Invalid JSON format. Expected an array." };
-        return;
-      }
-  
-      // Walidacja danych
-      for (const product of products) {
-        if (
-          !product.name ||
-          !product.unit_price ||
-          !product.unit_weight ||
-          !product.category_id ||
-          product.unit_price <= 0 ||
-          product.unit_weight <= 0
-        ) {
-          ctx.response.status = STATUS_CODE.BadRequest;
-          ctx.response.body = {
-            message: "Invalid product data. Check required fields and values.",
-          };
-          return;
+        // Sprawdzenie, czy produkty już istnieją w bazie
+        const productsExist = await client.query("SELECT COUNT(*) AS count FROM Products");
+        if (productsExist[0].count > 0) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Products already exist in the database" };
+            return;
         }
-      }
-  
-      // Wstawienie danych do tabeli Products
-      const ids = []
-      for (const product of products) {
-        const result = await client.query(
-          "INSERT INTO Products (name, description, unit_price, unit_weight, category_id) VALUES (?, ?, ?, ?, ?)",
-          [
-            product.name,
-            product.description,
-            product.unit_price,
-            product.unit_weight,
-            product.category_id,
-          ]
-        );
-        ids.push(result.lastInsertId)
-      }
-  
-      // Sukces
-      ctx.response.status = STATUS_CODE.OK;
-      ctx.response.body = { message: `Products initialized successfully, products ids ${ids}` };
+
+        // Wczytanie pliku JSON z żądania
+        const body = await ctx.request.body.json();
+        const products: Product[] = body;
+
+        if (!Array.isArray(products)) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Invalid JSON format. Expected an array." };
+            return; 
+        }
+
+        // Walidacja danych
+        for (const product of products) {
+            if (!validate(product)) {
+                ctx.response.status = STATUS_CODE.BadRequest;
+                ctx.response.body = {
+                message: "Invalid product data. Check required fields and values.",
+                };
+                return;
+            }
+        }
+
+        // Wstawienie danych do tabeli Products
+        const ids = []
+        for (const product of products) {
+            const result = await client.query(
+                "INSERT INTO Products (name, description, unit_price, unit_weight, category_id) VALUES (?, ?, ?, ?, ?)",
+                [product.name, product.description, product.unit_price, product.unit_weight, product.category_id,]
+                );
+            ids.push(result.lastInsertId)
+        }
+
+        // Sukces
+        ctx.response.status = STATUS_CODE.OK;
+        ctx.response.body = { message: `Products initialized successfully, products ids ${ids}` };
     } catch (error) {
-      console.error("Error initializing products:", error);
-      ctx.response.status = STATUS_CODE.InternalServerError;
-      ctx.response.body = { message: "Error initializing products" };
+        console.error("Error initializing products:", error);
+        ctx.response.status = STATUS_CODE.InternalServerError;
+        ctx.response.body = { message: "Error initializing products" };
     }
   });
+
 export default productRouter;

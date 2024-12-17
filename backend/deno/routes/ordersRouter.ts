@@ -163,17 +163,17 @@ ordersRouter.patch("/orders", async (ctx: RouterContext<string>) => {
 
         if (body.length == failed.length) {
             ctx.response.status = STATUS_CODE.BadRequest;
-            ctx.response.body = { message: "No products updated successfully",
+            ctx.response.body = { message: "No orders updated successfully",
                 failed: failed
             };
         } else {
             ctx.response.status = STATUS_CODE.OK; // OK
             if (failed.length == 0) {
-                ctx.response.body = { message: "Products updated successfully",
+                ctx.response.body = { message: "Orders updated successfully",
                     failed: failed
                 };
             } else {
-                ctx.response.body = { message: "Products updated successfully" };
+                ctx.response.body = { message: "Orders updated successfully" };
             }
         }
     } catch(error) {
