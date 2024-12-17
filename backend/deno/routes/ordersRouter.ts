@@ -13,6 +13,11 @@ interface Order {
     phone_number: string;     
   }
 
+interface Opinion {
+    content: string;
+    stars: number;
+}
+
 const NIEZATWIERDZONE :string = "NIEZATWIERDZONE"
 const ZATWIERDZONE :string ="ZATWIERDZONE"   
 const ANULOWANE :string = "ANULOWANE"      
@@ -55,6 +60,13 @@ ordersRouter.get("/orders/:id", async (ctx: RouterContext<string>) => {
             ctx.response.status = STATUS_CODE.NotFound;
             ctx.response.body = { message: "Order not found" };
         } else {
+            const opinionsResult = await client.query(
+                "SELECT * FROM Opinions WHERE order_id = ?", 
+                [id]
+            );
+            if (opinionsResult.length > 0) {
+                result[0]["opinions"] = opinionsResult;
+            }
             ctx.response.body = result[0];
         }
     } catch (error) {
@@ -203,6 +215,83 @@ ordersRouter.patch("/orders/:id", async (ctx: RouterContext<string>) => {
         console.error("Error inserting product:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
         ctx.response.body = { message: "Error creating product" };
+    }
+});
+
+
+ordersRouter.get("/orders/:id/opinions", async (ctx: RouterContext<string>) => {
+    try {
+        const orderId = ctx.params.id;  // Get the order ID from the URL
+
+        // Sprawdzamy, czy zamówienie istnieje
+        const orderResult = await client.query("SELECT * FROM Orders WHERE id = ?", [orderId]);
+        if (orderResult.length === 0) {
+            ctx.response.status = STATUS_CODE.NotFound;
+            ctx.response.body = { message: `Order with id ${orderId} not found.` };
+            return;
+        }
+
+        // Pobieramy wszystkie opinie związane z zamówieniem
+        const opinionsResult = await client.query(
+            "SELECT * FROM Opinions WHERE order_id = ?", 
+            [orderId]
+        );
+
+        // Jeśli brak opinii
+        if (opinionsResult.length === 0) {
+            ctx.response.status = STATUS_CODE.NoContent;
+            ctx.response.body = { message: `No opinions found for order id ${orderId}.` };
+            return;
+        }
+
+        // Zwracamy opinie
+        ctx.response.status = STATUS_CODE.OK;
+        ctx.response.body = { opinions: opinionsResult };
+    } catch (error) {
+        console.error("Error retrieving opinions:", error);
+        ctx.response.status = STATUS_CODE.InternalServerError;
+        ctx.response.body = { message: "Error retrieving opinions." };
+    }
+});
+
+ordersRouter.post("/orders/:id/opinions", async (ctx: RouterContext<string>) => {
+    try {
+        const orderId = ctx.params.id;  // Id zamówienia z URL
+        const opinion: Opinion = await ctx.request.body.json();
+
+        // Walidacja danych
+        if (!opinion.stars || !opinion.content) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Stars (rating) and content are required." };
+            return;
+        }
+
+        if (opinion.stars < 1 || opinion.stars > 5) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Stars must be between 1 and 5." };
+            return;
+        }
+
+        // Sprawdzamy, czy zamówienie istnieje
+        const orderResult = await client.query("SELECT * FROM Orders WHERE id = ?", [orderId]);
+        if (orderResult.length === 0) {
+            ctx.response.status = STATUS_CODE.NotFound;
+            ctx.response.body = { message: `Order with id ${orderId} not found.` };
+            return;
+        }
+
+        // Dodanie opinii do bazy danych
+        const result = await client.execute(
+            "INSERT INTO Opinions (order_id, stars, content) VALUES (?, ?, ?)",
+            [orderId, opinion.stars, opinion.content]
+        );
+
+        ctx.response.status = STATUS_CODE.Created;
+        ctx.response.body = { message: `Opinion added successfully to order id: ${orderId}`, opinionId: result.lastInsertId };
+    } catch (error) {
+        console.error("Error adding opinion:", error);
+        ctx.response.status = STATUS_CODE.InternalServerError;
+        ctx.response.body = { message: "Error adding opinion." };
     }
 });
 

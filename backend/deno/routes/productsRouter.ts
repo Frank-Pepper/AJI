@@ -146,6 +146,11 @@ productRouter.put("/products/:id", async (ctx: RouterContext<string>) => {
         // Parse the JSON body
         const id = ctx.params.id;
         const body = await ctx.request.body.json();
+        if (Array.isArray(body)) {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: "Array in body instead of single product" };
+            return;
+        }
         body['id'] = id;
 
         update(ctx, body);

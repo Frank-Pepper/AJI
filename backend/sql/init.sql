@@ -42,6 +42,14 @@ CREATE TABLE IF NOT EXISTS OrderItems (
     FOREIGN KEY (product_id) REFERENCES Products(id)
 );
 
+CREATE TABLE IF NOT EXISTS Opinions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    content VARCHAR(255) NOT NULL,
+    stars int NOT NULL CHECK (stars BETWEEN 1 AND 5),
+    FOREIGN KEY (order_id) REFERENCES Orders(id)
+);
+
 -- Insert initial Categories data
 INSERT INTO Categories (name) VALUES 
 ('Electronics'),
