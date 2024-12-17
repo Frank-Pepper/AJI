@@ -3,7 +3,7 @@ import { RouterContext } from "@oak/oak/router";
 import { STATUS_CODE } from "jsr:@oak/commons@1/status";
 
 import { client } from "../db.ts";
-import { apiKey } from "../.env"
+import { apiKey, endpoint } from "../.env"
 
 interface Product {
     id: number;
@@ -150,25 +150,27 @@ productRouter.get("/products/:id/seo-description", async (ctx: RouterContext<str
         // Parse the JSON body
         const id = ctx.params.id;
 
-        const result = await client.query("SELECT * FROM Products WHERE id = ?", [id]);        
-        const product = result[0];
-        console.log(product)
-        
-        const seoDescription = await addDescription(JSON.stringify(product))
+        const result = await client.query("SELECT * FROM Products WHERE id = ?", [id]);  
+        if (result.length == 0) {
+            ctx.response.status = STATUS_CODE.NotFound;
+            ctx.response.body = { message: "Product doesn't exist cant create description" };
+        } else {      
+            const product = result[0];
+            console.log(product)
+            
+            const seoDescription = await addDescription(JSON.stringify(product))
 
-        ctx.response.status = STATUS_CODE.OK; // OK
-        ctx.response.body = seoDescription;
+            ctx.response.status = STATUS_CODE.OK; // OK
+            ctx.response.body = seoDescription;
+        }
     } catch(error) {
-        console.error("Error updating product:", error);
+        console.error("Error creating description:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
-        ctx.response.body = { message: "Error creating product" };
+        ctx.response.body = { message: "Error creating description" };
     }
 })
 
 async function addDescription(product: string) {
-    
-    const endpoint = "https://api.groq.com/openai/v1/chat/completions";
-
     const requestBody = {
         messages: [
         { role: "system", content: "The description should: Be informative and persuasive for potential buyers. Highlight key features such as performance, design, and reliability.Be structured in HTML, including an appropriate title (<h1>), a price paragraph (<p>), and other relevant details that enhance SEO. Only html, add doctype so it could render, price is in $ weight in kg" },
@@ -196,6 +198,7 @@ async function addDescription(product: string) {
         return description;
     } catch (error) {
         console.error("An error occurred:", error);
+        throw error;
     }
 }
 

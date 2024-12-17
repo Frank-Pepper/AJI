@@ -100,6 +100,7 @@
     }
   },
   "redirects": {
+    "https://deno.land/std/http/server.ts": "https://deno.land/std@0.224.0/http/server.ts",
     "https://deno.land/x/mysql/mod.ts": "https://deno.land/x/mysql@v2.12.1/mod.ts"
   },
   "remote": {
@@ -131,6 +132,8 @@
     "https://deno.land/std@0.104.0/log/mod.ts": "91711789b28803082b1bdfb123d2c9685a7e01767f2e79c0a82706063ad964d8",
     "https://deno.land/std@0.104.0/testing/_diff.ts": "5d3693155f561d1a5443ac751ac70aab9f5d67b4819a621d4b96b8a1a1c89620",
     "https://deno.land/std@0.104.0/testing/asserts.ts": "e4311d45d956459d4423bc267208fe154b5294989da2ed93257b6a85cae0427e",
+    "https://deno.land/std@0.224.0/async/delay.ts": "f90dd685b97c2f142b8069082993e437b1602b8e2561134827eeb7c12b95c499",
+    "https://deno.land/std@0.224.0/http/server.ts": "f9313804bf6467a1704f45f76cb6cd0a3396a3b31c316035e6a4c2035d1ea514",
     "https://deno.land/std@0.77.0/fmt/colors.ts": "c5665c66f1a67228f21c5989bbb04b36d369b98dd7ceac06f5e26856c81c2531",
     "https://deno.land/x/bytes_formater@v1.4.0/deps.ts": "4f98f74e21145423b873a5ca6ead66dc3e674fa81e230a0a395f9b86aafeceea",
     "https://deno.land/x/bytes_formater@v1.4.0/format.ts": "657c41b9f180c3ed0f934dcf75f77b09b6a610be98bb07525bffe2acfd5af4d5",
