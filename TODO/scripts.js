@@ -112,8 +112,8 @@ async function categorizeTask(taskDescription) {
 
     const requestBody = {
         messages: [
-        { role: "system", content: "You are an assistant that classifies tasks as 'university' or 'private'." },
-        { role: "user", content: `Classify the following task as either 'university' or 'private' using one word: "${taskDescription}"` }
+        { role: "system", content: "You are an assistant that classifies tasks as 'University' or 'Private'." },
+        { role: "user", content: `Classify the following task as either 'University' or 'Private' using one word: "${taskDescription}"` }
         ],
         model: "llama3-8b-8192"
     };
@@ -142,4 +142,3 @@ async function categorizeTask(taskDescription) {
 }
   
 init();
-setInterval(updateTodoList, 1000);
