@@ -303,8 +303,10 @@ ordersRouter.post("/orders/:id/opinions", async (ctx: RouterContext<string>) => 
             ctx.response.body = { message: `Order with id ${orderId} not found.` };
             return;
         }
+        const status =  orderResult[0].status_id;
 
-        // Dodanie opinii do bazy danych
+        if ( status == ZREALIZOWANE|| status == ANULOWANE) {
+            // Dodanie opinii do bazy danych
         const result = await client.execute(
             "INSERT INTO Opinions (order_id, stars, content) VALUES (?, ?, ?)",
             [orderId, opinion.stars, opinion.content]
@@ -312,6 +314,12 @@ ordersRouter.post("/orders/:id/opinions", async (ctx: RouterContext<string>) => 
 
         ctx.response.status = STATUS_CODE.Created;
         ctx.response.body = { message: `Opinion added successfully to order id: ${orderId}`, opinionId: result.lastInsertId };
+        } else {
+            ctx.response.status = STATUS_CODE.BadRequest;
+            ctx.response.body = { message: `Could not add opinon for order with ${status} status` };
+        }
+
+        
     } catch (error) {
         console.error("Error adding opinion:", error);
         ctx.response.status = STATUS_CODE.InternalServerError;
