@@ -3,7 +3,7 @@ import { RouterContext } from "@oak/oak/router";
 import { STATUS_CODE } from "jsr:@oak/commons@1/status";
 
 import { client } from "../db.ts";
-import { apiKey, endpoint } from "../.env"
+import { apiKey, endpoint } from "../.env.ts"
 
 interface Product {
     id: number;
