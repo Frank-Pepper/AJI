@@ -13,6 +13,13 @@ interface Order {
     phone_number: string;     
   }
 
+interface orderItem {
+    order_id: number;
+    product_id: number;
+    unit_price: number;
+    quantity: number;
+}
+
 interface Opinion {
     content: string;
     stars: number;
@@ -60,6 +67,13 @@ ordersRouter.get("/orders/:id", async (ctx: RouterContext<string>) => {
             ctx.response.status = STATUS_CODE.NotFound;
             ctx.response.body = { message: "Order not found" };
         } else {
+            const orderItems = await client.query(
+                "SELECT * FROM OrderItems WHERE order_id = ?", 
+                [id]
+            );
+            result[0]["orderItems"] = orderItems;
+
+
             const opinionsResult = await client.query(
                 "SELECT * FROM Opinions WHERE order_id = ?", 
                 [id]
@@ -79,8 +93,8 @@ ordersRouter.get("/orders/:id", async (ctx: RouterContext<string>) => {
 // Dodaj zamówienie
 ordersRouter.post("/orders", async (ctx: RouterContext<string>) => {
     try {
-        const body: Order = await ctx.request.body.json();
-        const { username, email, phone_number } = body;
+        const body = await ctx.request.body.json();
+        const { username, email, phone_number, orderItems } = body;
         const status_id = NIEZATWIERDZONE;
         // const confirmation_date = new Date("1970-01-01T00:00:00Z");
 
@@ -110,6 +124,16 @@ ordersRouter.post("/orders", async (ctx: RouterContext<string>) => {
             "INSERT INTO Orders (status_id, username, email, phone_number) VALUES (?, ?, ?, ?)",
             [status_id, username, email, phone_number],
         );
+        const order_id = result.lastInsertId;
+        let orderItem: orderItem;
+        for (orderItem of orderItems) {
+            
+            const productResult = await client.query("SELECT * FROM Products WHERE id = ?", [orderItem.product_id]);  
+            if (orderItem.quantity > 0 && productResult.length > 0) {
+                await client.execute("INSERT INTO OrderItems (order_id, product_id, unit_price, quantity) VALUES (?, ?, ?, ?)",
+                [order_id, orderItem.product_id, productResult[0].unit_price, orderItem.quantity])
+            }
+        }
         console.log(result)
         ctx.response.status = STATUS_CODE.Created;
         ctx.response.body = { message: `Order added successfully, id: ${result.lastInsertId}` };
