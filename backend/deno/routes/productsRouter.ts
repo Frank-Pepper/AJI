@@ -202,4 +202,69 @@ async function addDescription(product: string) {
     }
 }
 
+
+  // Endpoint POST /init do inicjalizacji danych towarów
+  productRouter.post("/init", async (ctx: RouterContext<string>) => {
+    try {
+      // Sprawdzenie, czy produkty już istnieją w bazie
+      const productsExist = await client.query("SELECT COUNT(*) AS count FROM Products");
+      if (productsExist[0].count > 0) {
+        ctx.response.status = STATUS_CODE.BadRequest;
+        ctx.response.body = { message: "Products already exist in the database" };
+        return;
+      }
+  
+      // Wczytanie pliku JSON z żądania
+      const body = await ctx.request.body.json();
+      const products: Product[] = body;
+  
+      if (!Array.isArray(products)) {
+        ctx.response.status = STATUS_CODE.BadRequest;
+        ctx.response.body = { message: "Invalid JSON format. Expected an array." };
+        return;
+      }
+  
+      // Walidacja danych
+      for (const product of products) {
+        if (
+          !product.name ||
+          !product.unit_price ||
+          !product.unit_weight ||
+          !product.category_id ||
+          product.unit_price <= 0 ||
+          product.unit_weight <= 0
+        ) {
+          ctx.response.status = STATUS_CODE.BadRequest;
+          ctx.response.body = {
+            message: "Invalid product data. Check required fields and values.",
+          };
+          return;
+        }
+      }
+  
+      // Wstawienie danych do tabeli Products
+      const ids = []
+      for (const product of products) {
+        const result = await client.query(
+          "INSERT INTO Products (name, description, unit_price, unit_weight, category_id) VALUES (?, ?, ?, ?, ?)",
+          [
+            product.name,
+            product.description,
+            product.unit_price,
+            product.unit_weight,
+            product.category_id,
+          ]
+        );
+        ids.push(result.lastInsertId)
+      }
+  
+      // Sukces
+      ctx.response.status = STATUS_CODE.OK;
+      ctx.response.body = { message: `Products initialized successfully, products ids ${ids}` };
+    } catch (error) {
+      console.error("Error initializing products:", error);
+      ctx.response.status = STATUS_CODE.InternalServerError;
+      ctx.response.body = { message: "Error initializing products" };
+    }
+  });
 export default productRouter;
