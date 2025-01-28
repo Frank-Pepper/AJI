@@ -16,24 +16,18 @@
             <th>Confirmation Date</th>
             <th>Status</th>
             <th>Total Value</th>
-            <th>Items</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="order in filteredOrders" :key="order.id">
-            <td>{{ order.id }}</td>
+            <td>
+              <router-link :to="'/orders/' + order.id">{{ order.id }}</router-link>
+            </td>
             <td>{{ order.username }}</td>
             <td>{{ order.confirmation_date }}</td>
             <td>{{ order.status_id }}</td>
             <td>{{ getTotalValue(order.orderItems) }} zł</td>
-            <td>
-              <ul>
-                <li v-for="item in order.orderItems" :key="item.product_id">
-                  {{ item.name }} ({{ item.quantity }} pcs)
-                </li>
-              </ul>
-            </td>
             <td>
               <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-success" @click="updateOrderStatus(order.id, 'ZREALIZOWANE')">Zrealizowane</button>
               <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-danger" @click="updateOrderStatus(order.id, 'ANULOWANE')">Anulowane</button>
