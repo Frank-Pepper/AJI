@@ -30,6 +30,7 @@
           </tr>
         </tbody>
       </table>
+      <h3>Total Order Price: {{ totalOrderPrice }} zł</h3>
     </div>
     <div v-else>
       <p>Loading...</p>
@@ -57,6 +58,14 @@ export default {
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
+  },
+  computed: {
+    totalOrderPrice() {
+      if (this.order && this.order.orderItems) {
+        return this.order.orderItems.reduce((total, item) => total + item.unit_price * item.quantity, 0).toFixed(2);
+      }
+      return 0;
+    },
   },
 };
 </script>

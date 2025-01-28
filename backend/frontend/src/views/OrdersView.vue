@@ -27,7 +27,7 @@
             <td>{{ order.username }}</td>
             <td>{{ order.confirmation_date }}</td>
             <td>{{ order.status_id }}</td>
-            <td>{{ getTotalValue(order.orderItems) }} zł</td>
+            <td>{{ order.totalOrderPrice }} zł</td>
             <td>
               <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-success" @click="updateOrderStatus(order.id, 'ZREALIZOWANE')">Zrealizowane</button>
               <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-danger" @click="updateOrderStatus(order.id, 'ANULOWANE')">Anulowane</button>
@@ -54,6 +54,12 @@
         ...order,
         orderItems: order.orderItems || [],
       }));
+  
+      // Fetch total prices for all orders
+      for (const order of this.orders) {
+        await this.fetchOrderTotal(order.id);
+      }
+  
       this.filteredOrders = this.orders;
     },
     methods: {
@@ -64,8 +70,21 @@
           this.filteredOrders = this.orders;
         }
       },
-      getTotalValue(orderItems) {
-        return orderItems.reduce((total, item) => total + item.unit_price * item.quantity, 0).toFixed(2);
+      async fetchOrderTotal(orderId) {
+        try {
+          const response = await fetch(`/api/orders/${orderId}`);
+          if (response.ok) {
+            const order = await response.json();
+            const total = order.orderItems.reduce((total, item) => total + item.unit_price * item.quantity, 0).toFixed(2);
+            this.orders = this.orders.map(order =>
+              order.id === orderId ? { ...order, totalOrderPrice: total } : order
+            );
+          } else {
+            console.error(`Failed to fetch order details for order ID: ${orderId}`);
+          }
+        } catch (error) {
+          console.error(`Error fetching order details for order ID: ${orderId}`, error);
+        }
       },
       async updateOrderStatus(orderId, status) {
         const response = await fetch(`/api/orders/${orderId}`, {
