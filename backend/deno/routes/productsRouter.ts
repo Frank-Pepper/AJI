@@ -3,7 +3,7 @@ import { RouterContext } from "@oak/oak/router";
 import { STATUS_CODE } from "jsr:@oak/commons@1/status";
 
 import { client } from "../db.ts";
-import { apiKey, endpoint } from "../.env.ts"
+//import { apiKey, endpoint } from "../.env.ts"
 
 interface Product {
     id: number;
@@ -190,37 +190,37 @@ productRouter.get("/products/:id/seo-description", async (ctx: RouterContext<str
     }
 })
 
-async function addDescription(product: string) {
-    const requestBody = {
-        messages: [
-        { role: "system", content: "The description should: Be informative and persuasive for potential buyers. Highlight key features such as performance, design, and reliability.Be structured in HTML, including an appropriate title (<h1>), a price paragraph (<p>), and other relevant details that enhance SEO. Only html, add doctype so it could render, price is in $ weight in kg" },
-        { role: "user", content: `${product}` }
-        ],
-        model: "llama3-8b-8192"
-    };
+// async function addDescription(product: string) {
+//     const requestBody = {
+//         messages: [
+//         { role: "system", content: "The description should: Be informative and persuasive for potential buyers. Highlight key features such as performance, design, and reliability.Be structured in HTML, including an appropriate title (<h1>), a price paragraph (<p>), and other relevant details that enhance SEO. Only html, add doctype so it could render, price is in $ weight in kg" },
+//         { role: "user", content: `${product}` }
+//         ],
+//         model: "llama3-8b-8192"
+//     };
 
-    try {
-        const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-        });
+//     try {
+//         const response = await fetch(endpoint, {
+//         method: "POST",
+//         headers: {
+//             "Authorization": `Bearer ${apiKey}`,
+//             "Content-Type": "application/json"
+//         },
+//         body: JSON.stringify(requestBody)
+//         });
 
-        if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
+//         if (!response.ok) {
+//         throw new Error(`Error: ${response.status} ${response.statusText}`);
+//         }
 
-        const data = await response.json();
-        const description = data.choices[0].message.content.trim(); // Adjust based on response structure
-        return description;
-    } catch (error) {
-        console.error("An error occurred:", error);
-        throw error;
-    }
-}
+//         const data = await response.json();
+//         const description = data.choices[0].message.content.trim(); // Adjust based on response structure
+//         return description;
+//     } catch (error) {
+//         console.error("An error occurred:", error);
+//         throw error;
+//     }
+// }
 
 
   // Endpoint POST /init do inicjalizacji danych towarów
