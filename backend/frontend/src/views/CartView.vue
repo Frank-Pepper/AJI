@@ -1,25 +1,86 @@
 <template>
-    <div>
-      <h1>Your Cart</h1>
-      <table class="table mt-3">
+    <div class="container mt-4">
+      <h2>Shopping Cart</h2>
+      <table class="table table-striped table-hover">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Total</th>
+            <th scope="col">Name</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Price</th>
+            <th scope="col">Weight</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in cartItems" :key="item.id">
+          <tr v-for="item in cart" :key="item.id">
             <td>{{ item.name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.unit_price }}</td>
-            <td>{{ item.quantity * item.unit_price }}</td>
+            <td>
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" @click="decreaseQuantity(item)">-</button>
+                <input
+                  type="text"
+                  class="form-control text-center"
+                  v-model="item.quantity"
+                  readonly
+                />
+                <button class="btn btn-outline-secondary" @click="increaseQuantity(item)">+</button>
+              </div>
+            </td>
+            <td>{{ item.unit_price }} zł</td>
+            <td>{{ item.unit_weight }} kg</td>
+            <td>
+              <button class="btn btn-danger" @click="removeFromCart(item)">Remove</button>
+            </td>
           </tr>
         </tbody>
       </table>
-      <h3>Total: {{ cartTotal }}</h3>
+  
+      <h3>Summary</h3>
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Total Price</th>
+            <th scope="col">Total Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ totalPrice }} zł</td>
+            <td>{{ totalWeight }} kg</td>
+          </tr>
+        </tbody>
+      </table>
+  
+      <div class="mt-4">
+        <h4>Contact Information</h4>
+        <div class="mb-3">
+          <label for="name" class="form-label">Name</label>
+          <input type="text" id="name" class="form-control" v-model="contactInfo.name" />
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" class="form-control" v-model="contactInfo.email" />
+        </div>
+        <div class="mb-3">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input
+            type="text"
+            id="phone"
+            class="form-control"
+            v-model="contactInfo.phone"
+            @blur="validatePhone"
+          />
+          <div v-if="phoneError" class="text-danger">Invalid phone number. It must have 9 digits.</div>
+        </div>
+      </div>
+  
+      <button
+        class="btn btn-primary mt-3"
+        @click="placeOrder"
+        :disabled="phoneError"
+      >
+        Zamów
+      </button>
     </div>
   </template>
   
@@ -27,18 +88,92 @@
   export default {
     data() {
       return {
-        cartItems: [],
+        cart: [],
+        contactInfo: {
+          name: '',
+          email: '',
+          phone: '',
+        },
+        phoneError: false,
       };
     },
     computed: {
-      cartTotal() {
-        return this.cartItems.reduce((total, item) => total + item.quantity * item.unit_price, 0);
+      totalPrice() {
+        return this.cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+      },
+      totalWeight() {
+        return this.cart.reduce((sum, item) => sum + item.unit_weight * item.quantity, 0);
       },
     },
-    async created() {
-      const response = await fetch('/api/cart');
-      this.cartItems = await response.json();
+    methods: {
+      increaseQuantity(item) {
+        item.quantity++;
+      },
+      decreaseQuantity(item) {
+        if (item.quantity > 1) {
+          item.quantity--;
+        }
+      },
+      removeFromCart(item) {
+        this.cart = this.cart.filter(cartItem => cartItem.id !== item.id);
+      },
+      validatePhone() {
+        const phoneRegex = /^[0-9]{9}$/;
+        this.phoneError = !phoneRegex.test(this.contactInfo.phone);
+      },
+      async placeOrder() {
+        const orderData = {
+          username: this.contactInfo.name,
+          email: this.contactInfo.email,
+          phone_number: this.contactInfo.phone,
+          orderItems: this.cart.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+          })),
+        };
+  
+        try {
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData),
+          });
+  
+          if (response.ok) {
+            alert('Zamówienie zostało pomyślnie złożone.');
+            this.cart = []; // Clear the cart
+          } else {
+            const error = await response.json();
+            alert(`Błąd zamówienia: ${error.message}`);
+          }
+        } catch (error) {
+          alert(`Błąd połączenia z serwerem: ${error.message}`);
+        }
+      },
+    },
+    created() {
+      // Initialize cart with some items for testing purposes
+      this.cart = [
+        { id: 1, name: 'Laptop', unit_price: 1500.00, unit_weight: 2.5, quantity: 1 },
+        { id: 2, name: 'Book A', unit_price: 25.99, unit_weight: 0.5, quantity: 2 },
+        { id: 3, name: 'Sofa', unit_price: 499.99, unit_weight: 50.0, quantity: 1 },
+      ];
     },
   };
   </script>
+  
+  <style>
+  .container {
+    max-width: 1200px;
+  }
+  .form-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  </style>
   
