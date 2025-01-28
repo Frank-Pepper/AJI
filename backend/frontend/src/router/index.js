@@ -1,14 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ProductsView from '../views/ProductsView.vue';
 import ProductDetailView from '../views/ProductDetailView.vue';
-//import OrdersView from '../views/OrdersView.vue';
-//import CartView from '../views/CartView.vue';
+import CartView from '../views/CartView.vue';
+import OrdersView from '../views/OrdersView.vue';
+import OrderDetailView from '../views/OrderDetailView.vue';
 
 const routes = [
   { path: '/products', component: ProductsView },
-  { path: '/products/:id', component: ProductDetailView }
- // { path: '/orders', component: OrdersView },
- // { path: '/cart', component: CartView },
+  { path: '/products/:id', component: ProductDetailView },
+  { path: '/cart', component: CartView },
+  { path: '/orders', component: OrdersView },
+  { path: '/order/:id', component: OrderDetailView }, // Add route for order details
 ];
 
 const router = createRouter({
