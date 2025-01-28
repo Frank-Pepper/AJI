@@ -19,7 +19,9 @@
       </thead>
       <tbody>
         <tr v-for="product in filteredProducts" :key="product.id">
-          <td>{{ product.name }}</td>
+          <td>
+            <router-link :to="'/products/' + product.id">{{ product.name }}</router-link>
+          </td>
           <td>{{ product.description }}</td>
           <td>{{ product.price }}</td>
           <td><button class="btn btn-primary" @click="addToCart(product)">Buy</button></td>
@@ -28,6 +30,7 @@
     </table>
   </div>
 </template>
+
 
 <script>
 export default {
