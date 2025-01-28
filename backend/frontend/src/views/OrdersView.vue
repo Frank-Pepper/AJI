@@ -16,7 +16,6 @@
             <th>Confirmation Date</th>
             <th>Status</th>
             <th>Total Value</th>
-            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -28,10 +27,6 @@
             <td>{{ order.confirmation_date }}</td>
             <td>{{ order.status_id }}</td>
             <td>{{ order.totalOrderPrice }} zł</td>
-            <td>
-              <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-success" @click="updateOrderStatus(order.id, 'ZREALIZOWANE')">Zrealizowane</button>
-              <button v-if="order.status_id === 'NIEZATWIERDZONE'" class="btn btn-danger" @click="updateOrderStatus(order.id, 'ANULOWANE')">Anulowane</button>
-            </td>
           </tr>
         </tbody>
       </table>
@@ -84,25 +79,6 @@
           }
         } catch (error) {
           console.error(`Error fetching order details for order ID: ${orderId}`, error);
-        }
-      },
-      async updateOrderStatus(orderId, status) {
-        const response = await fetch(`/api/orders/${orderId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status_id: status }),
-        });
-  
-        if (response.ok) {
-          alert(`Order status updated to ${status}.`);
-          this.orders = this.orders.map(order =>
-            order.id === orderId ? { ...order, status_id: status } : order
-          );
-          this.filterOrders(); // Apply filter after status change
-        } else {
-          alert('Failed to update order status.');
         }
       },
     },

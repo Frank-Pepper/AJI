@@ -31,6 +31,9 @@
         </tbody>
       </table>
       <h3>Total Order Price: {{ totalOrderPrice }} zł</h3>
+      <div v-if="order.status_id !== 'ZATWIERDZONE'">
+        <router-link :to="'/orders/' + order.id + '/approval'" class="btn btn-primary mt-3">Go to Approval</router-link>
+      </div>
     </div>
     <div v-else>
       <p>Loading...</p>
@@ -53,7 +56,6 @@ export default {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      console.log('Fetched Order:', data);  // Logging the fetched order details
       this.order = data;
     } catch (error) {
       console.error('Error fetching order details:', error);
