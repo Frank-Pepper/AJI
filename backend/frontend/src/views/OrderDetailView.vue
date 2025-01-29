@@ -31,9 +31,7 @@
         </tbody>
       </table>
       <h3>Total Order Price: {{ totalOrderPrice }} zł</h3>
-      <div v-if="order.status_id !== 'ZATWIERDZONE'">
-        <router-link :to="'/orders/' + order.id + '/approval'" class="btn btn-primary mt-3">Go to Approval</router-link>
-      </div>
+      <router-link :to="'/orders/' + order.id + '/approval'" class="btn btn-primary mt-3">Go to Approval</router-link>
     </div>
     <div v-else>
       <p>Loading...</p>

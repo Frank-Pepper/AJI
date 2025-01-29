@@ -3,6 +3,7 @@
       <h2>Your Orders</h2>
       <select v-model="selectedStatus" @change="filterOrders" class="form-control">
         <option value="">All</option>
+        <option value="NIEZREALIZOWANE">Niezrealizowane</option>
         <option value="NIEZATWIERDZONE">Niezatwierdzone</option>
         <option value="ZATWIERDZONE">Zatwierdzone</option>
         <option value="ANULOWANE">Anulowane</option>
@@ -60,7 +61,11 @@
     methods: {
       filterOrders() {
         if (this.selectedStatus) {
-          this.filteredOrders = this.orders.filter(order => order.status_id === this.selectedStatus);
+          if (this.selectedStatus === 'NIEZREALIZOWANE') {
+            this.filteredOrders = this.orders.filter(order => order.status_id !== 'ZREALIZOWANE');
+          } else {
+            this.filteredOrders = this.orders.filter(order => order.status_id === this.selectedStatus);
+          }
         } else {
           this.filteredOrders = this.orders;
         }

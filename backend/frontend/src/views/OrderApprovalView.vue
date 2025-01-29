@@ -51,6 +51,7 @@
   
       <div class="mt-3">
         <button class="btn btn-primary" @click="approveOrder" :disabled="phoneError">Approve Order</button>
+        <button class="btn btn-success ms-2" @click="completeOrder">Complete Order</button>
         <button class="btn btn-danger ms-2" @click="cancelOrder">Cancel Order</button>
       </div>
     </div>
@@ -93,6 +94,9 @@
       async approveOrder() {
         await this.updateOrderStatus("ZATWIERDZONE");
       },
+      async completeOrder() {
+        await this.updateOrderStatus("ZREALIZOWANE");
+      },
       async cancelOrder() {
         await this.updateOrderStatus("ANULOWANE");
       },
@@ -118,7 +122,7 @@
           });
   
           if (response.ok) {
-            alert(`Order ${status === "ZATWIERDZONE" ? "approved" : "canceled"} successfully.`);
+            alert(`Order ${status === "ZATWIERDZONE" ? "approved" : status === "ZREALIZOWANE" ? "completed" : "canceled"} successfully.`);
             this.$router.push('/orders');
           } else {
             const error = await response.json();
