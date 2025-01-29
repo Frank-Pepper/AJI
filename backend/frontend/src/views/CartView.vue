@@ -153,14 +153,22 @@
         }
       },
     },
-    created() {
-      // Initialize cart with some items for testing purposes
-      this.cart = [
-        { id: 1, name: 'Laptop', unit_price: 1500.00, unit_weight: 2.5, quantity: 1 },
-        { id: 2, name: 'Book A', unit_price: 25.99, unit_weight: 0.5, quantity: 2 },
-        { id: 3, name: 'Sofa', unit_price: 499.99, unit_weight: 50.0, quantity: 1 },
-      ];
-    },
+    async created() {
+  try {
+    const response = await fetch('/api/products');
+    const products = await response.json();
+    this.cart = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      unit_price: product.unit_price,
+      unit_weight: product.unit_weight,
+      quantity: 1, // Set default quantity to 1
+    }));
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+}
+
   };
   </script>
   
