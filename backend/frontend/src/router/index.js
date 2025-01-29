@@ -6,6 +6,8 @@ import OrdersView from '../views/OrdersView.vue';
 import OrderDetailView from '../views/OrderDetailView.vue';
 import EditProductView from '../views/EditProductView.vue';
 import OrderApprovalView from '../views/OrderApprovalView.vue';
+import InitProductsView from '../views/InitProductsView.vue';
+import CreateProductView from '../views/CreateProductView.vue';
 
 const routes = [
   { path: '/products', component: ProductsView },
@@ -14,7 +16,9 @@ const routes = [
   { path: '/orders', component: OrdersView },
   { path: '/orders/:id', component: OrderDetailView },
   { path: '/edit-product/:id', component: EditProductView },
-  { path: '/orders/:id/approval', component: OrderApprovalView }, // Updated route for order approval
+  { path: '/orders/:id/approval', component: OrderApprovalView },
+  { path: '/init-products', component: InitProductsView },
+  { path: '/create-product', component: CreateProductView }, // New route for creating a product
 ];
 
 const router = createRouter({

@@ -1,6 +1,10 @@
 <template>
   <div>
     <h2>Products</h2>
+    <div class="mb-3">
+      <button class="btn btn-secondary" @click="goToInit">Initialize Products</button>
+      <button class="btn btn-primary ms-2" @click="goToCreate">Create New Product</button>
+    </div>
     <table class="table table-striped table-hover">
       <thead>
         <tr>
@@ -34,6 +38,14 @@ export default {
   async created() {
     const response = await fetch('/api/products');
     this.products = await response.json();
+  },
+  methods: {
+    goToInit() {
+      this.$router.push('/init-products');
+    },
+    goToCreate() {
+      this.$router.push('/create-product');
+    },
   },
 };
 </script>
